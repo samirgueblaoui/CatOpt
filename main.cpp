@@ -84,7 +84,42 @@ std::string to_string(const Primitive& primitive){
     return s;
 }
 
+struct Morphism{
+    std::vector<Primitive> steps;
+};
 
+Morphism identity(){
+    Morphism m;
+
+    return m;
+}
+
+Morphism lift(Primitive primitive){
+    Morphism m;
+    m.steps.push_back(primitive);
+
+    return m;
+}
+
+Scalar evaluate(const Morphism& morphism, Scalar x){
+    for(const Primitive& f : morphism.steps){
+        x = evaluate(f, x);
+    }
+
+    return x;
+}
+
+std::string to_string(const Morphism& morphism){
+    if(morphism.steps.empty()) return "Id";
+    
+    std::string s;
+    for(size_t i = 0; i < morphism.steps.size() - 1; i++){
+        s += to_string(morphism.steps[i]) + " >> ";
+    }
+    s += to_string(morphism.steps[morphism.steps.size() - 1]);
+    
+    return s;
+}
 
 void run_tests(){
     
@@ -97,6 +132,15 @@ void run_tests(){
     assert(evaluate(f, 3) == 4);
     assert(evaluate(g, 4) == 16);
     assert(to_string(f) == "Add(1)");
+
+    const auto m = identity();
+    Morphism m2;
+    m2.steps.push_back(make_add(1));
+    m2.steps.push_back(make_square());
+    assert(evaluate(m, 1) == 1);
+    assert(evaluate(m2, 3) == 16);
+    assert(to_string(m) == "Id");
+    assert(to_string(m2) == "Add(1) >> Square");
 
     std::cout << "Tout les test sont passé avec succes !\n";
 }
