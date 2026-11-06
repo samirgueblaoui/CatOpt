@@ -1,11 +1,12 @@
 #include "../include/test.hpp"
 #include "../include/categorie.hpp"
+#include "../include/optimiseur.hpp"
 
 #include <cassert>
 #include <iostream>
 #include <limits>
 
-void run_tests(){
+void run_tests_categorie(){
     
     assert(square_value(add_value(3, 1)) == 16);
     assert(add_value(square_value(3), 1) == 10);
@@ -50,6 +51,30 @@ void run_tests(){
     assert(same_syntax(compose(identity(), a), a));
     assert(same_syntax(compose(a, identity()), a));
     assert(same_syntax(compose(compose(a, a2), a3), compose(a, compose(a2, a3))));
+}
 
-    std::cout << "Tout les test sont passé avec succes !\n";
+void run_tests_optimiseur(){
+    Morphism m3{{make_add(0)}};
+    assert(same_syntax(simplify(m3), identity()));
+    assert(same_syntax(simplify(identity()), identity()));
+
+    Morphism m4{{make_add(1), make_add(2)}};
+    Morphism m4s{{make_add(3)}};
+    assert(same_syntax(simplify(m4), m4s));
+
+    Morphism m5{{make_add(1), make_add(2), make_add(3)}};
+    Morphism m5s{{make_add(6)}};
+    assert(same_syntax(simplify(m5), m5s));
+
+    Morphism m6{{make_add(1), make_square(), make_add(2)}};
+    assert(same_syntax(simplify(m6), m6));
+
+    Morphism m7{{make_add(std::numeric_limits<Scalar>::max()), make_add(1)}};
+    assert(same_syntax(simplify(m7), identity()));
+
+    Morphism m8{{make_add(0), make_square(), make_add(2), make_add(3)}};
+    Morphism m8s{{make_square(), make_add(5)}};
+    assert(same_syntax(simplify(m8), m8s));
+    assert(same_syntax(simplify(simplify(m8)), simplify(m8)));
+    
 }

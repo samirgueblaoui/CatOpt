@@ -5,8 +5,11 @@
 
 int main(){
 
-    std::cout << "CatOpt - premier morphisme\n";
-    run_tests();
+    std::cout << "Projet CatOpt\n";
+    run_tests_categorie();
+    run_tests_optimiseur();
+
+    std::cout << "Tout les test sont passé avec succes !\n";
 
     return 0;
 }
