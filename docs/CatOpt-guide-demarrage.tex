@@ -1,0 +1,1187 @@
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[french]{babel}
+\usepackage{lmodern}
+\usepackage{microtype}
+\DisableLigatures{encoding=T1,family=lmtt}
+\usepackage[margin=23mm,headheight=15pt]{geometry}
+\usepackage{amsmath,amssymb,mathtools}
+\usepackage{stmaryrd}
+\usepackage{xcolor}
+\usepackage{array,booktabs,tabularx}
+\usepackage{enumitem}
+\usepackage{listings}
+\usepackage[most]{tcolorbox}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{hyperref}
+
+\definecolor{ink}{HTML}{163044}
+\definecolor{accent}{HTML}{087F8C}
+\definecolor{pale}{HTML}{EFF7F8}
+\definecolor{warm}{HTML}{FFF6E9}
+\definecolor{muted}{HTML}{536675}
+\definecolor{codebg}{HTML}{F4F6F8}
+
+\hypersetup{colorlinks=true,linkcolor=accent,urlcolor=accent,
+  pdftitle={CatOpt — Guide de démarrage},
+  pdfauthor={Guide préparé pour Samir},
+  pdfsubject={Apprendre le C++20 par les morphismes, la composition et la fonctorialité}}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt}
+\clubpenalty=10000
+\widowpenalty=10000
+\setlist[enumerate]{leftmargin=*,itemsep=5pt,topsep=5pt}
+\setlist[itemize]{leftmargin=*,itemsep=3pt,topsep=4pt}
+\setcounter{tocdepth}{1}
+\setcounter{secnumdepth}{0}
+\titleformat{\section}{\Large\bfseries\color{ink}}{}{0pt}{}
+\titleformat{\subsection}{\large\bfseries\color{ink}}{}{0pt}{}
+\titlespacing*{\section}{0pt}{8pt}{9pt}
+\titlespacing*{\subsection}{0pt}{12pt}{4pt}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\color{muted}\textbf{CatOpt} / Apprendre le C++ par les catégories}
+\fancyfoot[L]{\small\color{muted}Guide de démarrage · C++20}
+\fancyfoot[R]{\small\thepage}
+\renewcommand{\headrulewidth}{0.3pt}
+\renewcommand{\footrulewidth}{0pt}
+\newcommand{\code}[1]{\texttt{\detokenize{#1}}}
+\newcommand{\Id}{\operatorname{id}}
+\newcommand{\List}{\operatorname{List}}
+\newcommand{\sem}[1]{\llbracket #1\rrbracket}
+\newcommand{\checkpoint}{\(\square\)\ }
+\newcommand{\etape}[2]{\clearpage\section{Étape #1 — #2}}
+
+\tcbset{enhanced,boxrule=0.4pt,arc=2mm,
+  left=3mm,right=3mm,top=2mm,bottom=2mm,
+  before skip=8pt,after skip=8pt,fonttitle=\bfseries}
+\newtcolorbox{objectif}{colback=pale,colframe=accent,
+  coltitle=ink,colbacktitle=pale,title={Pourquoi cette étape existe dans CatOpt}}
+\newtcolorbox{theorie}{colback=white,colframe=accent,
+  coltitle=white,colbacktitle=accent,title={Le lien avec la théorie des catégories}}
+\newtcolorbox{validation}{colback=codebg,colframe=muted,
+  coltitle=ink,colbacktitle=codebg,title={Tu peux passer à la suite lorsque…}}
+\newtcolorbox{vigilance}{colback=warm,colframe=orange!55!black,
+  coltitle=ink,colbacktitle=warm,title={Point à comprendre}}
+
+\lstdefinestyle{cpp}{language=C++,basicstyle=\small\ttfamily,
+  keywordstyle=\color{accent}\bfseries,commentstyle=\color{muted},
+  stringstyle=\color{orange!65!black},backgroundcolor=\color{codebg},
+  frame=single,rulecolor=\color{codebg},framerule=0.3pt,
+  columns=fullflexible,keepspaces=true,showstringspaces=false,
+  breaklines=true,tabsize=4,xleftmargin=2mm,xrightmargin=2mm,
+  aboveskip=8pt,belowskip=8pt,upquote=true,
+  morekeywords={uint64_t,size_t}}
+\lstset{style=cpp}
+\lstdefinestyle{plain}{style=cpp,language={},keywordstyle={},
+  commentstyle={},stringstyle={}}
+\BeforeBeginEnvironment{lstlisting}{\par\noindent\begin{minipage}{\linewidth}}
+\AfterEndEnvironment{lstlisting}{\end{minipage}\par}
+
+\begin{document}
+
+\hypersetup{pageanchor=false}
+\begin{titlepage}
+\vspace*{13mm}
+{\color{accent}\large CARNET DE CONSTRUCTION}\par
+\vspace{9mm}
+{\color{ink}\fontsize{46}{50}\selectfont\bfseries CatOpt}\par
+\vspace{5mm}
+{\color{ink}\LARGE Apprendre le C++\par avec la théorie des catégories}\par
+\vspace{8mm}
+{\large Un guide pas à pas pour construire ton premier\par langage de morphismes et son optimiseur.}
+\vspace{13mm}
+
+\begin{objectif}
+Tu vas représenter des programmes comme des morphismes, les composer,
+les exécuter, puis les transformer à l'aide d'équations explicites.
+Chaque nouvelle notion de C++ répondra à un besoin de cette construction.
+\end{objectif}
+
+\vspace{6mm}
+\[
+ U \xrightarrow{\;A_1\;} U \xrightarrow{\;S\;} U
+ \qquad\leadsto\qquad
+ \List(U)\xrightarrow{\;F(S\circ A_1)\;}\List(U)
+\]
+\begin{center}
+\color{muted}Ajouter un, élever au carré, puis transformer une liste\par
+avec un seul parcours au lieu de deux.
+\end{center}
+
+\vfill
+\textbf{Point de départ :} tu as déjà pratiqué les classes et rencontré les
+smart pointers ; les bases restent à consolider et les templates à découvrir.
+
+\textbf{Format :} tâches courtes, signatures proposées, exemples attendus,
+questions de compréhension et critères de réussite. Les fonctions centrales
+restent à écrire par toi.
+
+\vspace{5mm}
+{\small\color{muted}Volume 1 · Du premier morphisme à la fusion des \code{map}\par
+Version du 6 novembre 2026}
+\end{titlepage}
+
+\pagenumbering{roman}
+\hypersetup{pageanchor=true}
+\tableofcontents
+\clearpage
+\pagenumbering{arabic}
+\section{Le fil conducteur : que construit-on exactement ?}
+
+L'objectif principal est de progresser en C++ en construisant quelque chose
+qui te plaît. CatOpt sera d'abord un \textbf{petit langage de calculs purs}
+écrit en C++. Il manipulera des descriptions de programmes que tu peux
+inspecter. Ce volume aboutit à un interpréteur et à deux petites optimisations ;
+la génération de code C++ viendra dans un volume ultérieur.
+
+Le chemin complet sera :
+\[
+\boxed{\text{Décrire}}\;\longrightarrow\;
+\boxed{\text{Composer}}\;\longrightarrow\;
+\boxed{\text{Interpréter}}\;\longrightarrow\;
+\boxed{\text{Réécrire}}.
+\]
+
+\subsection{Le résultat concret que tu vises}
+Tu construiras le morphisme \(f(x)=x+1\), le morphisme \(g(x)=x^2\), puis
+leur composition \(g\circ f\). Tu pourras afficher sa description et
+vérifier que l'entrée \(3\) produit \(16\).
+
+Ensuite, tu compareras ces deux programmes de listes :
+\[
+\underbrace{F(f)\text{ puis }F(g)}_{\text{deux parcours}}
+\qquad\text{et}\qquad
+\underbrace{F(g\circ f)}_{\text{un parcours}}.
+\]
+Ils donneront les mêmes valeurs ; le second évitera un tableau intermédiaire
+dans l'interpréteur que tu auras construit.
+
+\subsection{Pourquoi commencer par des suites d'opérations ?}
+Un morphisme sera d'abord une suite comme
+\code{[Add(1), Square]}. Tu apprendras ainsi les valeurs, les références,
+les conteneurs et la composition sans devoir gérer immédiatement un arbre
+récursif. Cette représentation a une raison mathématique : un morphisme
+librement construit à partir de générateurs peut être représenté par un chemin.
+
+Nous commencerons avec \textbf{un seul objet} \(U\), donc avec des morphismes
+\(U\to U\), appelés \emph{endomorphismes}. C'est déjà une catégorie.
+Le fait que toutes les compositions soient typées correctement découlera
+de cette restriction. Le vérificateur de types général arrivera quand nous
+introduirons d'autres domaines et codomaines.
+
+La notation \(\sem{p}(x)\) signifiera « le résultat de l'interprétation
+du programme \(p\) sur la valeur \(x\) ». Elle distingue la description
+\(p\) de la fonction qu'elle représente.
+
+\subsection{Comment utiliser ce guide}
+Pour chaque étape : lis l'objectif, écris sur papier l'exemple mathématique,
+implémente une seule tâche, compile, puis exécute les vérifications.
+Si tu bloques, isole une question précise : « Que contient ce vecteur ? »,
+« Qui possède cette valeur ? », « Dans quel ordre les fonctions s'appliquent-elles ? »
+
+\begin{vigilance}
+Les blocs de signatures indiquent les fonctions à écrire : ce sont des
+\emph{déclarations}, pas des implémentations complètes. Une déclaration qui
+finit par un point-virgule indique au compilateur qu'une fonction existe.
+Sa définition, avec un corps entre accolades, sera ton travail.
+\end{vigilance}
+
+Garde une courte note après chaque étape : ce que tu as construit, la loi
+mathématique concernée, une notion C++ comprise et une question encore ouverte.
+Tu peux répartir une étape sur plusieurs séances. Le critère de progression
+est ta compréhension, pas la vitesse.
+
+\etape{0}{Préparer un atelier minimal}
+\label{sec:atelier}
+\begin{objectif}
+Pouvoir compiler et exécuter une petite modification immédiatement.
+Ce cycle court te permettra de confronter une définition mathématique à son
+implémentation sans perdre le fil du projet.
+\end{objectif}
+
+\textbf{C++ à travailler :} point d'entrée \code{main}, en-têtes, compilation,
+avertissements et assertions.
+
+\subsection{À implémenter, dans cet ordre}
+\begin{enumerate}
+\item Dans \code{main.cpp}, écris un programme qui affiche
+\code{CatOpt - premier morphisme}. Il doit inclure \code{<iostream>}.
+\item Crée un dossier \code{build}, puis compile depuis la racine du projet.
+Avec Clang, les commandes sont :
+\begin{lstlisting}[style=plain]
+mkdir -p build
+clang++ -std=c++20 -Wall -Wextra -Wpedantic -g -O0 \
+    main.cpp -o build/catopt
+./build/catopt
+\end{lstlisting}
+Avec GCC, remplace \code{clang++} par \code{g++}. Le dossier \code{build}
+contient les exécutables ; ton code source reste à la racine pour l'instant.
+\item Ajoute \code{<cassert>} et une assertion vraie dans \code{main}.
+Change-la volontairement en assertion fausse, observe l'arrêt du programme,
+puis rétablis-la. Tu sais maintenant reconnaître un test qui échoue.
+\item Crée une fonction \code{void run_tests();}, appelle-la depuis
+\code{main}, et place tes assertions dans sa définition. Elle accueillera
+les premiers tests du langage.
+\end{enumerate}
+
+\begin{theorie}
+Nous voulons vérifier des propriétés des morphismes. L'atelier de tests sera
+le lieu où tu écriras des exemples de ces propriétés. Une assertion n'est pas
+une preuve universelle : elle vérifie un cas concret et révèle des erreurs
+dans l'implémentation.
+\end{theorie}
+
+\subsection{Questions à te poser}
+Que fait \code{#include} ? Quelle différence fais-tu entre une erreur de
+compilation, une erreur d'édition de liens et un échec à l'exécution ?
+Peux-tu retrouver le premier message utile quand une compilation échoue ?
+
+\begin{validation}
+\checkpoint Tu sais recompiler après une modification.\par
+\checkpoint Le programme s'exécute et une assertion fausse l'arrête.\par
+\checkpoint Tu as compris chaque avertissement restant, et corrigé ceux qui
+signalent une erreur.\par
+Pour cette phase, conserve les assertions actives : ne définis pas
+\code{NDEBUG}, qui les désactive.
+\end{validation}
+
+\etape{1}{Donner un sens précis aux calculs}
+\label{sec:scalaires}
+\begin{objectif}
+Définir les valeurs que CatOpt manipule et les premières fonctions qu'il
+saura représenter. Une optimisation ne peut être justifiée que si l'on sait
+précisément ce que signifie le programme initial.
+\end{objectif}
+
+\textbf{C++ à travailler :} alias de type, paramètres, retour par valeur,
+arithmétique non signée et limites d'un type.
+
+\begin{theorie}
+Notre premier objet sera \(U=\mathbb{Z}/2^{64}\mathbb{Z}\), représenté par les
+entiers de \(0\) à \(2^{64}-1\). Les calculs se font modulo \(2^{64}\).
+Nous définissons trois familles de fonctions :
+\[
+\Id_U(x)=x,\qquad A_c(x)=x+c\pmod{2^{64}},\qquad
+S(x)=x^2\pmod{2^{64}}.
+\]
+Toutes ont le type mathématique \(U\to U\).
+\end{theorie}
+
+\subsection{À implémenter, dans cet ordre}
+\begin{enumerate}
+\item Inclus \code{<cstdint>} et déclare :
+\begin{lstlisting}
+using Scalar = std::uint64_t;
+\end{lstlisting}
+Cet alias donne un nom de projet au type. Il ne crée pas un nouveau type
+distinct. Ce guide suppose une plateforme qui fournit \code{std::uint64_t},
+comme les plateformes usuelles de Clang et GCC.
+\item Écris les trois fonctions suivantes :
+\begin{lstlisting}
+Scalar identity_value(Scalar x);
+Scalar add_value(Scalar x, Scalar constant);
+Scalar square_value(Scalar x);
+\end{lstlisting}
+\item Dans les tests, compose manuellement l'addition de \(1\) et le carré.
+L'entrée \(3\) doit donner \(16\). Inverse l'ordre : tu dois obtenir \(10\).
+\item Inclus \code{<limits>}. Obtiens la valeur maximale avec
+\code{std::numeric_limits<Scalar>::max()} et vérifie que lui ajouter
+\code{Scalar{1}} produit zéro.
+\end{enumerate}
+
+\subsection{Exemples attendus}
+\begin{center}
+\begin{tabular}{lll}
+\toprule
+Calcul & Entrée & Résultat \\
+\midrule
+\(\Id_U\) & \(7\) & \(7\) \\
+\(A_1\) & \(3\) & \(4\) \\
+\(S\) & \(4\) & \(16\) \\
+\(S\circ A_1\) & \(3\) & \(16\) \\
+\(A_1\circ S\) & \(3\) & \(10\) \\
+\(A_1\) & \(2^{64}-1\) & \(0\) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\begin{vigilance}
+Le choix du type fait partie de la sémantique. Ici, addition et multiplication
+sur nos valeurs non signées de 64 bits suivent l'arithmétique modulaire.
+Nous ne prétendons pas calculer sur tous les entiers mathématiques.
+Employer un \code{int} signé et laisser le résultat dépasser son domaine
+introduirait un comportement indéfini en C++.
+\end{vigilance}
+
+Les fonctions du langage sont pures : pas d'affichage, de mutation d'une
+variable globale ni d'aléatoire dans leur calcul. Les diagnostics de CatOpt
+seront réalisés autour de l'évaluation. Nous raisonnons sur les résultats
+mathématiques ; les échecs matériels ou d'allocation sont en dehors du modèle
+de ce premier volume.
+
+\subsection{Questions à te poser}
+Pourquoi passer un petit entier par valeur ? Quelle différence y a-t-il entre
+le paramètre \code{x}, une variable locale et la valeur retournée ?
+Pourquoi l'ordre de composition change-t-il le résultat ?
+
+\begin{validation}
+\checkpoint Tous les exemples du tableau sont vérifiés.\par
+\checkpoint Tu peux expliquer ce qu'est l'objet \(U\).\par
+\checkpoint Tu peux expliquer pourquoi \(A_1\circ S\neq S\circ A_1\).
+\end{validation}
+
+\textbf{Lien avec la suite :} pour l'instant, tu exécutes directement des
+fonctions C++. L'optimiseur aura besoin d'en manipuler la \emph{description}.
+
+\etape{2}{Représenter les générateurs comme des données}
+\label{sec:primitives}
+\begin{objectif}
+Permettre à CatOpt d'inspecter une opération avant de l'exécuter. Pour
+reconnaître « ajouter zéro », le moteur doit voir le nom de l'opération et
+sa constante, pas seulement disposer d'une fonction exécutable.
+\end{objectif}
+
+\textbf{C++ à travailler :} \code{enum class}, \code{struct}, initialisation,
+\code{switch}, \code{const&}, \code{std::string}.
+
+\begin{theorie}
+Les opérations \(A_c\) et \(S\) sont nos \emph{générateurs}. Un générateur est
+un bloc élémentaire à partir duquel nous construirons des morphismes par
+composition. Sa description est syntaxique ; la fonction \(U\to U\) qu'il
+désigne est son interprétation.
+\end{theorie}
+
+\subsection{À implémenter, dans cet ordre}
+\begin{enumerate}
+\item Déclare un \code{enum class PrimitiveKind} contenant deux valeurs :
+\code{AddConstant} et \code{Square}.
+\item Déclare une \code{struct Primitive} avec un champ \code{kind} de ce type
+et un champ \code{constant} de type \code{Scalar}.
+\item Écris deux fonctions de construction :
+\begin{lstlisting}
+Primitive make_add(Scalar constant);
+Primitive make_square();
+\end{lstlisting}
+Pour \code{Square}, fixe \code{constant} à zéro. Ce champ n'y sert pas, mais
+une convention stable facilitera les comparaisons de descriptions.
+\item Écris l'interpréteur d'une primitive :
+\begin{lstlisting}
+Scalar evaluate(const Primitive& primitive, Scalar x);
+\end{lstlisting}
+Utilise un \code{switch} sur \code{kind} et les fonctions de l'étape 1.
+N'ajoute pas de retour arbitraire comme zéro pour masquer un cas invalide ;
+tu peux terminer par une exception \code{std::logic_error} de
+\code{<stdexcept>} si aucun cas reconnu n'a été rencontré.
+\item Écris une fonction d'affichage qui retourne une chaîne :
+\begin{lstlisting}
+std::string to_string(const Primitive& primitive);
+\end{lstlisting}
+Elle doit produire \code{Add(3)} ou \code{Square}. Inclus \code{<string>}.
+\end{enumerate}
+
+\subsection{Ce que tu dois observer}
+\begin{lstlisting}
+const auto f = make_add(1);
+const auto g = make_square();
+assert(evaluate(f, 3) == 4);
+assert(evaluate(g, 4) == 16);
+assert(to_string(f) == "Add(1)");
+\end{lstlisting}
+\code{auto} laisse le compilateur déduire ici le type \code{Primitive}.
+Le mot \code{const} interdit de modifier la variable après son initialisation.
+
+\subsection{Pourquoi une référence constante ?}
+Dans \code{const Primitive&}, le symbole \code{&} désigne une référence à
+l'objet fourni par l'appelant. La fonction peut le lire sans en faire une
+copie, et \code{const} lui interdit de le modifier par cette référence.
+La primitive est petite : un passage par valeur serait aussi défendable.
+Le choix prépare surtout le même contrat de lecture pour les morphismes,
+qui contiendront plusieurs opérations.
+
+\begin{vigilance}
+La structure publique permet encore de construire des descriptions qui ne
+respectent pas nos conventions. Pour ce premier noyau, construis les
+primitives uniquement avec \code{make_add} et \code{make_square}.
+À l'étape 8, tu rendras cette convention explicite dans l'interface.
+\end{vigilance}
+
+\subsection{Questions à te poser}
+Quelle différence y a-t-il entre \code{make_add(1)} et
+\code{add_value(3, 1)} ? Une description doit-elle contenir son entrée ?
+Pourquoi l'affichage ne doit-il pas exécuter la primitive ?
+
+\begin{validation}
+\checkpoint Chaque primitive peut être construite, affichée et évaluée.\par
+\checkpoint \code{evaluate} ne modifie pas la description reçue.\par
+\checkpoint Tu distingues « construire le morphisme » et « calculer sa valeur ».
+\end{validation}
+
+\etape{3}{Construire un morphisme comme un chemin}
+\label{sec:morphismes}
+\begin{objectif}
+Représenter un programme entier avec plusieurs générateurs. Cette
+représentation sera l'entrée de l'interpréteur et, plus tard, de l'optimiseur.
+\end{objectif}
+
+\textbf{C++ à travailler :} \code{std::vector}, boucle sur une collection,
+propriété par valeur, copie, surcharges et cas vide.
+
+\begin{theorie}
+Un chemin de générateurs donne un morphisme :
+\[
+U\xrightarrow{A_1}U\xrightarrow{S}U.
+\]
+Nous stockons les opérations dans \textbf{l'ordre d'exécution}, de gauche à
+droite : \code{[Add(1), Square]} représente \(S\circ A_1\).
+Le chemin vide représente \(\Id_U\), puisqu'il laisse son entrée inchangée.
+\end{theorie}
+
+\subsection{À implémenter, dans cet ordre}
+\begin{enumerate}
+\item Inclus \code{<vector>} et introduis la représentation :
+\begin{lstlisting}
+struct Morphism {
+    std::vector<Primitive> steps;
+};
+\end{lstlisting}
+\item Écris deux fonctions de construction :
+\begin{lstlisting}
+Morphism identity();
+Morphism lift(Primitive primitive);
+\end{lstlisting}
+La première crée un chemin vide ; la seconde un chemin contenant exactement
+la primitive fournie. Ici, \code{lift} signifie seulement « mettre une
+primitive dans une description de morphisme » ; nous n'introduisons pas
+une nouvelle structure catégorique avec ce nom.
+\item Écris l'évaluation du chemin :
+\begin{lstlisting}
+Scalar evaluate(const Morphism& morphism, Scalar x);
+\end{lstlisting}
+Pars d'une valeur courante égale à \code{x}. Pour chaque primitive, remplace
+la valeur courante par le résultat de son évaluation. Retourne la valeur
+finale. Le chemin vide doit fonctionner sans traitement artificiel.
+Les fonctions \code{evaluate} pour \code{Primitive} et pour \code{Morphism}
+portent le même nom : ce sont des \emph{surcharges}. Le compilateur choisit
+la fonction selon le type des arguments. Le même principe s'applique à
+\code{to_string}.
+\item Écris \code{std::string to_string(const Morphism& morphism);}.
+Affiche \code{Id} pour le chemin vide et, par exemple,
+\code{Add(1) >> Square} pour les deux étapes précédentes.
+\item Copie un morphisme dans une deuxième variable, modifie les étapes de
+la copie et vérifie que l'original n'a pas changé.
+\end{enumerate}
+
+\subsection{Exemples attendus}
+\begin{lstlisting}
+const Morphism p{{make_add(1), make_square()}};
+assert(evaluate(p, 3) == 16);
+assert(evaluate(identity(), 3) == 3);
+assert(evaluate(lift(make_square()), 5) == 25);
+\end{lstlisting}
+Les deux niveaux d'accolades initialisent la structure puis son vecteur.
+Si cette syntaxe te gêne, commence avec une variable vide et deux appels
+à \code{push_back} ; vérifie ensuite que les deux écritures décrivent le même chemin.
+
+\subsection{Pourquoi aucun smart pointer pour le moment ?}
+Le \code{Morphism} possède son vecteur, qui possède ses primitives. Quand le
+morphisme est détruit, les ressources de son vecteur sont libérées
+automatiquement. C'est déjà une application du principe RAII : la durée de
+vie des ressources est attachée à celle des objets.
+
+Un \code{std::shared_ptr} introduirait ici une question de partage que notre
+modèle n'exige pas. Les pointeurs intelligents deviendront pertinents si
+tu choisis ensuite de représenter des expressions récursives ou partagées.
+
+\subsection{Questions à te poser}
+Quel objet possède les primitives ? Que copie-t-on en copiant un
+\code{Morphism} ? Pourquoi la variable courante de \code{evaluate} peut-elle
+changer alors que le morphisme reçu est constant ?
+
+\begin{validation}
+\checkpoint L'identité est un vecteur vide et conserve toute entrée testée.\par
+\checkpoint Un chemin est évalué dans son ordre de stockage.\par
+\checkpoint Modifier une copie ne modifie pas l'original.\par
+\checkpoint Tu peux relier le vecteur au chemin de morphismes dessiné plus haut.
+\end{validation}
+
+\etape{4}{Composer et vérifier les lois de catégorie}
+\label{sec:composition}
+\begin{objectif}
+Disposer de l'opération centrale du langage : construire un programme à
+partir de deux programmes. La composition servira ensuite à fusionner les
+calculs effectués sur les éléments d'une liste.
+\end{objectif}
+
+\textbf{C++ à travailler :} lecture par référence constante, création d'un
+résultat par valeur, concaténation et égalité de descriptions.
+
+\begin{theorie}
+La convention est fixe : \code{compose(g, f)} représente \(g\circ f\), donc
+\textbf{on exécute d'abord \(f\), puis \(g\)}. Les lois attendues sont :
+\[
+\Id_U\circ f=f,\qquad f\circ\Id_U=f,\qquad
+h\circ(g\circ f)=(h\circ g)\circ f.
+\]
+Elles portent sur la composition. L'associativité de la composition ne
+signifie pas que toutes les opérations arithmétiques sont associatives.
+\end{theorie}
+
+\subsection{À implémenter, dans cet ordre}
+\begin{enumerate}
+\item Écris :
+\begin{lstlisting}
+Morphism compose(const Morphism& g, const Morphism& f);
+\end{lstlisting}
+Construis un résultat contenant les étapes de \code{f}, puis celles de
+\code{g}. Commence par deux boucles avec \code{push_back}. Tu pourras
+ensuite étudier \code{insert} et \code{reserve}, sans changer le contrat.
+\item Vérifie que la composition ne modifie aucun argument.
+Retourne le résultat par valeur. Ne retourne jamais une référence vers une
+variable locale, dont la durée de vie se termine à la sortie de la fonction.
+\item Écris une comparaison structurelle explicite :
+\begin{lstlisting}
+bool same_syntax(const Morphism& a, const Morphism& b);
+\end{lstlisting}
+Compare la longueur, les sortes d'opérations et, pour une addition, la
+constante. Cette fonction compare des descriptions, pas toutes les valeurs
+qu'elles pourraient produire.
+\item Vérifie les deux lois d'identité et l'associativité avec cette
+comparaison, sur plusieurs chemins, dont le chemin vide.
+\item Vérifie aussi l'accord entre composition et interprétation :
+\begin{lstlisting}
+const auto f = lift(make_add(1));
+const auto g = lift(make_square());
+const Scalar x{3};
+assert(evaluate(compose(g, f), x)
+       == evaluate(g, evaluate(f, x)));
+\end{lstlisting}
+Utilise notamment \code{x} égal à \(0\), \(3\), \(7\) et à la valeur maximale.
+\end{enumerate}
+
+\subsection{Une erreur d'ordre que tes tests doivent détecter}
+Pose \(f=A_1\) et \(g=S\). Tu dois obtenir :
+\[
+\sem{\operatorname{compose}(g,f)}(3)=16,
+\qquad
+\sem{\operatorname{compose}(f,g)}(3)=10.
+\]
+Tester seulement deux additions ne suffirait pas à détecter une inversion :
+elles commutent ici. Choisir un exemple discriminant fait partie de la
+conception d'un bon test.
+
+\subsection{Pourquoi les lois sont-elles déjà vraies dans la structure ?}
+La composition concatène des suites. Ajouter la suite vide ne change rien ;
+concaténer trois suites donne les mêmes éléments dans le même ordre, quel
+que soit le parenthésage. Notre représentation a déjà oublié les parenthèses
+inutiles des compositions.
+
+Les chemins forment la catégorie libre à un objet engendrée par nos
+primitives. « Libre » signifie ici que l'on n'a pas encore identifié les
+chemins au moyen de relations supplémentaires entre générateurs.
+
+\begin{vigilance}
+\code{[Add(1), Add(2)]} et \code{[Add(3)]} sont deux chemins différents,
+mais ils désignent la même fonction sur \(U\). L'interprétation
+\(p\mapsto\sem{p}\) n'est donc pas injective. L'optimiseur exploitera
+précisément certaines de ces égalités sémantiques.
+\end{vigilance}
+
+\begin{validation}
+\checkpoint Tu sais expliquer l'ordre des arguments de \code{compose}.\par
+\checkpoint Les trois lois sont vérifiées structurellement sur tes exemples.\par
+\checkpoint Tu peux justifier ces lois par la concaténation, au-delà des tests.\par
+\checkpoint Tu distingues égalité de syntaxe et égalité de fonctions.
+\end{validation}
+
+\etape{5}{Écrire les premières réécritures justifiées}
+\label{sec:reecriture}
+\begin{objectif}
+Transformer une description en une autre, plus courte, sans changer la
+fonction calculée. CatOpt devient ici un premier optimiseur.
+\end{objectif}
+
+\textbf{C++ à travailler :} parcours et construction d'un vecteur, cas limites,
+invariant de boucle et contrat d'une fonction.
+
+\begin{theorie}
+Nous ajoutons deux familles d'équations :
+\[
+A_0=\Id_U,\qquad A_b\circ A_a=A_{a+b},
+\]
+où \(a+b\) est calculé modulo \(2^{64}\). Ce sont des lois de nos
+\emph{générateurs arithmétiques}, pas des lois vraies pour tous les morphismes
+d'une catégorie quelconque.
+
+Si \(E\) désigne ces équations, les chemins peuvent être regroupés modulo
+les égalités qu'elles engendrent, y compris à l'intérieur d'une composition.
+On obtient un quotient de la catégorie syntaxique. Pour construire ce
+premier moteur, tu n'as pas besoin d'implémenter les classes du quotient.
+\end{theorie}
+
+\subsection{Écris d'abord la justification sur papier}
+Pour toute valeur \(x\in U\),
+\[
+\sem{A_b\circ A_a}(x)=(x+a)+b=x+(a+b)=\sem{A_{a+b}}(x).
+\]
+L'associativité de l'addition modulaire justifie cette transformation.
+Pour \(A_0\), la justification est \(x+0=x\).
+
+Ces égalités restent valides à l'intérieur d'un chemin : remplacer une
+sous-composition par une fonction égale préserve la composition avec ce
+qui vient avant et après. C'est la compatibilité de l'égalité avec la composition.
+
+\subsection{À implémenter, dans cet ordre}
+\begin{enumerate}
+\item Déclare :
+\begin{lstlisting}
+Morphism simplify(const Morphism& input);
+\end{lstlisting}
+La fonction retourne une nouvelle description ; elle ne modifie pas
+\code{input}. Première version : reconstruis simplement le chemin en
+omettant chaque \code{Add(0)}.
+\item Ajoute la fusion d'additions \emph{adjacentes}. Une stratégie possible
+est d'accumuler une constante en attente pendant que tu lis une série
+d'additions. Quand tu rencontres \code{Square}, émets l'addition accumulée
+si elle est non nulle, remets l'accumulateur à zéro, puis émets \code{Square}.
+\item N'oublie pas d'émettre l'addition encore en attente à la fin du chemin.
+Si sa constante est zéro, aucune primitive ne doit être ajoutée.
+\item Vérifie que \code{simplify} ne modifie pas son entrée et préserve les
+valeurs calculées sur les exemples ci-dessous.
+\item Vérifie qu'une deuxième simplification produit la même syntaxe que
+la première : c'est l'idempotence de \code{simplify}.
+\end{enumerate}
+
+\subsection{Exemples attendus}
+Dans ce tableau, \(M=2^{64}-1\) et \code{[]} désigne le chemin vide.
+\begin{center}
+\small
+\begin{tabularx}{\linewidth}{@{}X X@{}}
+\toprule
+Avant & Après \\
+\midrule
+\code{[]} & \code{[]} \\
+\code{[Add(0)]} & \code{[]} \\
+\code{[Add(1), Add(2)]} & \code{[Add(3)]} \\
+\code{[Add(1), Add(2), Add(3)]} & \code{[Add(6)]} \\
+\code{[Add(1), Square, Add(2)]} & Inchangé \\
+\code{[Add(M), Add(1)]} & \code{[]} \\
+\code{[Add(0), Square, Add(2), Add(3)]} & \code{[Square, Add(5)]} \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+Sur l'entrée \(3\), le dernier chemin vaut \(14\) avant comme après
+simplification. Vérifie aussi plusieurs entrées proches de la borne du type.
+
+\subsection{L'invariant qui aide à programmer}
+Après avoir lu une partie du chemin, la sortie déjà construite, suivie de
+l'addition encore en attente, doit calculer la même fonction que la partie
+lue. Cet énoncé explique pourquoi tu peux différer l'émission des additions.
+Il t'aide aussi à repérer deux erreurs classiques : oublier la fin du chemin
+ou laisser une addition traverser un carré.
+
+\begin{vigilance}
+Tu ne peux pas déplacer librement une addition à travers \code{Square}.
+Sur \(3\), ajouter \(1\) puis élever au carré donne \(16\), tandis que
+l'ordre inverse donne \(10\). Une transformation doit avoir sa propre
+justification ; la présence d'une composition ne permet pas de permuter ses termes.
+\end{vigilance}
+
+\subsection{Mesurer ce que cette optimisation fait réellement}
+Définis le coût syntaxique \(C(p)\) comme le nombre de primitives du chemin
+\(p\). Vérifie sur tes exemples que :
+\[
+C(\operatorname{simplify}(p))\leq C(p).
+\]
+Cela décrit une réduction d'opérations interprétées. Cela ne démontre
+encore aucun gain de temps sur un programme compilé.
+
+Cette fonction n'est pas un décideur de toutes les égalités entre fonctions
+sur \(U\). Elle applique seulement les règles que tu lui as données.
+
+\begin{validation}
+\checkpoint Les exemples, notamment le chemin vide et le retour modulaire à
+zéro, sont traités correctement.\par
+\checkpoint Tu justifies les deux règles pour toute entrée \(x\).\par
+\checkpoint Tes tests comparent avant/après et vérifient l'idempotence.\par
+\checkpoint Tu sais distinguer cette justification générale des tests de ton code.
+\end{validation}
+
+\textbf{Premier jalon atteint :} tu disposes d'un langage, d'une interprétation
+et d'une transformation qui préserve cette interprétation.
+
+\etape{6}{Passer des scalaires aux listes avec un foncteur}
+\label{sec:map}
+\begin{objectif}
+Réutiliser chaque morphisme scalaire pour transformer tous les éléments
+d'une liste. Cette construction prépare directement la fusion des parcours.
+\end{objectif}
+
+\textbf{C++ à travailler :} vecteur d'éléments, entrée en lecture seule,
+construction d'une sortie, \code{reserve} et fonctions à plusieurs surcharges.
+
+\begin{theorie}
+Le foncteur des listes finies associe à un ensemble \(A\) l'ensemble
+\(\List(A)\), et à une fonction \(f:A\to B\) la fonction :
+\[
+F(f)([x_1,\ldots,x_n])=[f(x_1),\ldots,f(x_n)].
+\]
+Les deux lois de foncteur sont :
+\[
+F(\Id_U)=\Id_{\List(U)},\qquad
+F(g\circ f)=F(g)\circ F(f).
+\]
+\end{theorie}
+
+\subsection{À implémenter, dans cet ordre}
+\begin{enumerate}
+\item Déclare un alias \code{using Values = std::vector<Scalar>; }.
+Il représente les listes de valeurs de notre langage.
+\item Écris :
+\begin{lstlisting}
+Values map_values(const Morphism& f, const Values& input);
+\end{lstlisting}
+Crée une sortie vide, lis chaque élément de l'entrée, évalue \code{f} sur
+cet élément et ajoute le résultat à la sortie.
+\item Vérifie que la liste vide est acceptée et que l'entrée n'est jamais
+modifiée. L'ordre et le nombre des éléments doivent être conservés.
+\item Ajoute \code{reserve(input.size())} sur le vecteur de sortie pour
+réserver sa capacité. Cela ne crée aucun élément : ne confonds pas
+\code{reserve} avec \code{resize}.
+\item Écris des tests pour les deux lois de foncteur. Tu peux comparer
+directement les vecteurs de scalaires avec \code{==}.
+\end{enumerate}
+
+\subsection{Exemples attendus}
+Avec \(f=A_1\), \(g=S\) et \(xs=[0,1,2,3]\),
+\[
+F(f)(xs)=[1,2,3,4],\qquad
+F(g)(F(f)(xs))=[1,4,9,16].
+\]
+Les assertions centrales auront cette forme :
+\begin{lstlisting}
+const Values xs{0, 1, 2, 3};
+assert(map_values(identity(), xs) == xs);
+assert(map_values(compose(g, f), xs)
+       == map_values(g, map_values(f, xs)));
+\end{lstlisting}
+Répète ces vérifications avec une liste vide, un singleton et une liste
+contenant la valeur maximale du type.
+
+\subsection{La justification tient élément par élément}
+Pour un indice \(i\), le côté gauche de la seconde loi produit
+\(\sem{g\circ f}(x_i)=\sem{g}(\sem{f}(x_i))\). Le côté droit produit
+exactement la même valeur à la même position. Les listes ont la même
+longueur ; elles sont donc égales. La liste vide satisfait également la loi.
+
+\begin{vigilance}
+La loi \(F(\Id_U)=\Id_{\List(U)}\) exprime une égalité de valeurs produites.
+Appliquer \code{map_values} à l'identité peut construire une nouvelle liste
+égale à l'entrée. La loi n'exige ni la même adresse mémoire ni l'absence
+d'allocation. Ce décalage entre résultat et coût est justement ce que
+l'optimiseur pourra exploiter.
+\end{vigilance}
+
+\subsection{Précision sur les catégories employées}
+On peut voir cette construction comme un foncteur de la catégorie des
+chemins scalaires vers une catégorie à un objet \(\List(U)\), dont les
+morphismes sont les fonctions de listes ainsi obtenues. L'égalité dans la
+cible est l'égalité des fonctions, pas celle de leurs descriptions.
+
+C'est aussi l'interprétation scalaire suivie du foncteur des listes
+\(\List:\mathbf{Set}\to\mathbf{Set}\). Nous ne prétendons pas avoir un
+endofoncteur sur une petite catégorie possédant seulement \(U\) et
+\(\List(U)\) : appliquer de nouveau la construction ferait intervenir
+\(\List(\List(U))\), que notre langage ne représente pas encore.
+
+\begin{validation}
+\checkpoint Les valeurs, l'ordre, la longueur et le cas vide sont corrects.\par
+\checkpoint Tu sais expliquer ce que \(F\) fait à l'objet et aux morphismes.\par
+\checkpoint Tu peux démontrer les lois élément par élément.\par
+\checkpoint Tu distingues égalité du résultat et coût de l'exécution.
+\end{validation}
+
+\etape{7}{Fusionner les parcours par fonctorialité}
+\label{sec:fusion}
+\begin{objectif}
+Réaliser la première optimisation directement motivée par une loi de
+foncteur : remplacer plusieurs parcours d'une liste par un seul parcours
+qui exécute le morphisme composé sur chaque élément.
+\end{objectif}
+
+\textbf{C++ à travailler :} composition de structures, deux niveaux de
+parcours, séparation entre transformation d'un programme et exécution.
+
+\begin{theorie}
+La loi employée est exactement :
+\[
+\boxed{F(g)\circ F(f)=F(g\circ f).}
+\]
+Les deux côtés désignent la même fonction sur les listes. Ils ont cependant
+deux descriptions et deux stratégies d'exécution différentes dans CatOpt.
+Le moteur choisira celle qui matérialise moins de listes intermédiaires.
+\end{theorie}
+
+\subsection{7.1 — Décrire plusieurs parcours successifs}
+Introduis une structure distincte du morphisme scalaire :
+\begin{lstlisting}
+struct MapPipeline {
+    std::vector<Morphism> stages;
+};
+\end{lstlisting}
+Chaque élément du vecteur représente \emph{un parcours complet} de la liste.
+Le pipeline \code{[f, g]} signifie : appliquer \code{map_values(f, ...)},
+puis \code{map_values(g, ...)}. Les étapes sont stockées dans l'ordre
+d'exécution, comme les primitives d'un morphisme.
+
+Écris les fonctions suivantes :
+\begin{lstlisting}
+Values evaluate(const MapPipeline& pipeline, const Values& input);
+std::string to_string(const MapPipeline& pipeline);
+\end{lstlisting}
+Pour l'évaluation, commence avec une copie de l'entrée, puis remplace la
+liste courante par le résultat de chaque \code{map_values}.
+Un pipeline vide retourne donc une liste égale à l'entrée.
+Affiche \code{IdList} pour le pipeline vide et, par exemple,
+\code{Map(Add(1)) >> Map(Square)} pour deux parcours.
+
+\newpage
+\subsection{7.2 — Construire la description fusionnée}
+Déclare :
+\begin{lstlisting}
+MapPipeline fuse_maps(const MapPipeline& input);
+\end{lstlisting}
+Procède par petites tâches :
+\begin{enumerate}
+\item Pour une entrée vide, retourne un pipeline vide.
+\item Pars d'un morphisme scalaire accumulé égal à l'identité.
+\item Pour chaque étape \code{stage}, mets à jour l'accumulateur par
+\code{compose(stage, accumulated)}. Vérifie cet ordre à la main sur
+\code{[f, g]} avant d'écrire la boucle.
+\item Pour un pipeline non vide, retourne un pipeline contenant un seul
+morphisme : celui que tu as accumulé. Dans cette première version, conserve
+cette étape même si son chemin scalaire est vide.
+\item Vérifie que l'entrée reste inchangée et qu'aucune liste de données
+n'est évaluée pendant la fusion : la fonction manipule des descriptions.
+\end{enumerate}
+
+Garde d'abord la simplification scalaire de l'étape 5 séparée de cette
+transformation. Quand chacune fonctionne, tu pourras simplifier le morphisme
+fusionné. Tu sauras alors quelle transformation explique chaque changement.
+
+\subsection{7.3 — Vérifier le résultat et l'ordre}
+Construis \(f=A_1\), \(g=S\) et la liste \([0,1,2,3]\). Tu dois obtenir :
+\begin{lstlisting}[style=plain]
+Avant   : Map(Add(1)) >> Map(Square)
+Apres   : Map(Add(1) >> Square)
+Entree  : [0, 1, 2, 3]
+Resultat: [1, 4, 9, 16]
+\end{lstlisting}
+Les résultats avant et après doivent être égaux. Avec l'ordre inverse
+\code{[g, f]}, le résultat doit être \([1,2,5,10]\). Vérifie également
+un pipeline vide, un pipeline d'une seule étape, trois étapes et une liste vide.
+Teste expressément un pipeline contenant seulement \code{identity()} :
+après fusion, il doit garder une étape, même s'il calcule la même fonction
+qu'un pipeline vide. Leurs descriptions restent distinctes.
+
+\newpage
+\subsection{7.4 — Comprendre le gain sans brouiller la mesure}
+Pour une liste de longueur \(N\), un pipeline de \(k>0\) étapes effectue
+\(k\) parcours \code{map_values}, contre un après fusion. Pour notre
+interpréteur simple, le bilan des \emph{étapes map}, hors copie initiale
+commune de l'entrée, est le suivant :
+
+\begin{center}
+\begin{tabular}{lcc}
+\toprule
+Quantité & Avant & Après \\
+\midrule
+Parcours \code{map_values} & \(k\) & \(1\) \\
+Visites d'éléments par ces parcours & \(kN\) & \(N\) \\
+Listes produites par ces parcours & \(k\) & \(1\) \\
+Listes intermédiaires issues des \code{map} & \(k-1\) & \(0\) \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Le nombre d'opérations scalaires reste le même si l'on ne simplifie pas
+le morphisme composé : chaque élément subit toujours \(f\), puis \(g\), etc.
+Les gains portent ici sur les parcours et les listes matérialisées.
+Une liste vide ne contient aucun élément à visiter et peut n'exiger aucune
+allocation. « Liste produite » n'est donc pas un comptage exact d'appels
+à l'allocateur.
+
+Commence par afficher les nombres d'étapes des descriptions. Si tu veux
+vérifier les parcours réellement exécutés, ajoute ensuite un compteur dans
+le pilote de l'interpréteur, autour des appels à \code{map_values}.
+Ce compteur est un outil d'observation ; il ne fait pas partie du résultat
+mathématique des morphismes.
+
+\begin{vigilance}
+Ne conclus pas encore « le programme est deux fois plus rapide ».
+L'interpréteur a ses propres coûts, notamment la lecture des descriptions.
+Un chronométrage exige un protocole distinct. La conclusion établie ici est
+précise : mêmes valeurs, moins de parcours et de listes intermédiaires dans
+cette exécution.
+\end{vigilance}
+
+\subsection{Questions à te poser}
+Quelle différence y a-t-il entre \code{Morphism::steps} et
+\code{MapPipeline::stages} ? Pourquoi la loi de foncteur autorise-t-elle
+la fusion, mais pas l'inversion de \(f\) et \(g\) ? Pourquoi la pureté
+est-elle essentielle si l'ordre des appels entre éléments change ?
+
+\begin{validation}
+\checkpoint La fusion conserve l'ordre des fonctions et les résultats.\par
+\checkpoint Un pipeline non vide a exactement une étape après fusion.\par
+\checkpoint Le pipeline vide reste vide et tous les cas limites passent.\par
+\checkpoint Tu peux citer la loi qui justifie la transformation.\par
+\checkpoint Tu peux expliquer le gain sans confondre parcours et opérations scalaires.
+\end{validation}
+
+\etape{8}{Consolider le C++ sans perdre le modèle}
+\label{sec:consolider}
+\begin{objectif}
+Rendre ton petit langage plus lisible et plus difficile à utiliser
+incorrectement, tout en conservant exactement les comportements déjà testés.
+Cette étape prépare une extension du projet sans en changer le sens.
+\end{objectif}
+
+\textbf{C++ à travailler :} interfaces, invariants, compilation séparée,
+encapsulation et responsabilité des types.
+
+\subsection{À faire, dans cet ordre}
+\begin{enumerate}
+\item Sépare les déclarations, les définitions et le programme de démonstration.
+Une organisation suffisante est :
+\begin{lstlisting}[style=plain]
+CatOpt/
+  catopt.hpp     declarations et types du langage
+  catopt.cpp     evaluation, composition et transformations
+  tests.hpp      declaration de run_tests
+  tests.cpp      definition de run_tests et assertions
+  main.cpp       appel des tests et demonstration finale
+  build/         fichiers produits par la compilation
+\end{lstlisting}
+Protège chaque en-tête contre les inclusions multiples, par exemple avec
+\code{#pragma once}. Inclus \code{catopt.hpp} dans les fichiers qui utilisent
+ses types et \code{tests.hpp} dans \code{main.cpp} et \code{tests.cpp}.
+\item Compile les trois fichiers sources ensemble :
+\begin{lstlisting}[style=plain]
+clang++ -std=c++20 -Wall -Wextra -Wpedantic -g -O0 \
+    main.cpp catopt.cpp tests.cpp -o build/catopt
+\end{lstlisting}
+Une déclaration dans l'en-tête permet d'utiliser une fonction ; sa définition
+dans \code{catopt.cpp} fournit le code associé lors de l'édition de liens.
+\item Regroupe les noms du langage dans \code{namespace catopt}.
+Actualise les déclarations, les définitions et leurs utilisations.
+\item Renforce \code{Primitive} : empêche désormais la construction de
+combinaisons arbitraires de champs. Tu peux en faire une classe avec
+constructeur privé, fabriques publiques statiques et accès en lecture.
+Adapte les appels et les tests avant de modifier un autre type.
+\item Pour \code{Morphism}, décide quelles opérations doivent avoir accès
+au stockage. N'ajoute pas automatiquement un setter pour chaque champ.
+Une interface de lecture et les opérations de construction peuvent suffire.
+\end{enumerate}
+
+\begin{theorie}
+L'encapsulation protège les représentations sur lesquelles tes lois reposent.
+Par exemple, une primitive bien construite désigne toujours une opération
+reconnue, et un morphisme garde un ordre d'exécution explicite.
+Une classe n'est pas à elle seule une preuve mathématique ; elle aide à
+faire respecter les hypothèses de ton modèle par le code appelant.
+\end{theorie}
+
+\subsection{Une lecture mémoire utile}
+Choisis une fonction et explique la durée de vie de chaque objet qu'elle
+utilise. Identifie une copie nécessaire et une copie éventuellement évitable.
+Ne remplace pas chaque retour par \code{std::move} : le retour par valeur
+permet déjà, selon la situation, l'élision de copie ou le déplacement.
+Comprends d'abord le contrat de propriété.
+
+Avec Clang ou GCC sur une plateforme qui les prend en charge, tu peux aussi
+recompiler avec \code{-fsanitize=address,undefined -fno-omit-frame-pointer}
+et exécuter tes exemples. Ces outils recherchent certaines erreurs mémoire
+et certains comportements indéfinis ; ils ne prouvent pas les lois de CatOpt.
+
+\begin{validation}
+\checkpoint Le programme compile depuis ses différents fichiers.\par
+\checkpoint Tous les exemples précédents ont le même résultat.\par
+\checkpoint Tu peux expliquer les conventions devenues des invariants protégés.\par
+\checkpoint Tu sais qui possède chaque vecteur et pourquoi ses éléments restent valides.
+\end{validation}
+
+\clearpage
+\section{La démonstration qui termine ce premier volume}
+\label{sec:demo}
+Prépare un exécutable qui raconte la transformation en quatre temps.
+Son affichage peut ressembler à ceci :
+
+\begin{lstlisting}[style=plain]
+1. Un morphisme scalaire
+   f = Add(1)
+   g = Square
+   g o f = Add(1) >> Square
+   (g o f)(3) = 16
+
+2. Une reecriture arithmetique
+   Avant : Add(1) >> Add(2) >> Square
+   Apres : Add(3) >> Square
+   Loi   : A_b o A_a = A_(a+b)
+   Entree 3 : 36 dans les deux cas
+
+3. Une reecriture par fonctorialite
+   Avant : Map(Add(1)) >> Map(Square)
+   Apres : Map(Add(1) >> Square)
+   Loi   : F(g) o F(f) = F(g o f)
+   Entree : [0, 1, 2, 3]
+   Resultat : [1, 4, 9, 16]
+   Parcours map : 2 -> 1
+
+4. Verification
+   Tous les tests executes sont passes.
+\end{lstlisting}
+
+Cet affichage est une démonstration explicative. Ce n'est pas encore un
+certificat vérifié indépendamment : les règles et l'interpréteur restent
+des éléments de confiance de ton programme.
+
+\subsection{Les cinq questions auxquelles tu dois savoir répondre}
+\begin{enumerate}
+\item Quel est l'objet de la catégorie scalaire, et que représentent ses morphismes ?
+\item Pourquoi l'identité est-elle une suite vide ?
+\item Pourquoi \code{compose(g, f)} stocke-t-il d'abord \code{f} ?
+\item Quelle différence sépare une loi de catégorie, une loi arithmétique
+et une loi de foncteur ?
+\item Qu'est-ce qui est préservé par l'optimiseur, et quel coût diminue
+effectivement dans ta première démonstration ?
+\end{enumerate}
+
+\begin{objectif}
+À ce stade, CatOpt possède une syntaxe, une sémantique, une composition,
+des tests de lois et deux sortes de réécritures. Tu as travaillé les bases
+du C++ dans un programme cohérent, et tu peux expliquer chaque transformation
+avec les objets mathématiques qui l'ont motivée.
+\end{objectif}
+
+\clearpage
+\section{La suite : choisir une nouvelle difficulté à la fois}
+\label{sec:suite}
+Le noyau par chemins est volontairement limité : il décrit des calculs
+linéaires sur un seul type scalaire, puis des parcours de listes. Tu peux
+le faire évoluer lorsque tu sais expliquer ses limites concrètes.
+
+\begin{center}
+\small
+\begin{tabularx}{\linewidth}{@{}>{\raggedright\arraybackslash}p{0.24\linewidth}
+  >{\raggedright\arraybackslash}X >{\raggedright\arraybackslash}X@{}}
+\toprule
+Prochain besoin & Notions C++ & Question catégorique \\
+\midrule
+Plusieurs objets et types intermédiaires & Types explicites, validation,
+\code{std::variant} & Quand \(g\circ f\) est-il bien typé ? \\
+\addlinespace
+Une syntaxe avec \code{Compose}, \code{Map} et produits imbriqués & Arbres,
+visiteurs, récursivité, \code{std::unique_ptr} & Comment conserver la
+structure d'un morphisme composé ? \\
+\addlinespace
+Des sous-expressions partagées & Identifiants, arène, propriété partagée
+si nécessaire & Comment plusieurs chemins réutilisent-ils une description ? \\
+\addlinespace
+Une interface typée à la compilation & Templates, déduction, concepts &
+Peut-on refuser une composition dont les objets intermédiaires diffèrent ? \\
+\addlinespace
+Deux calculs indépendants & Types produits, représentation de graphes &
+Que signifie \(f\otimes g\), et quand la loi d'interchange est-elle valide ? \\
+\addlinespace
+Explorer plusieurs réécritures & Hachage, union-find, e-graphs & Comment
+représenter plusieurs morphismes égaux modulo des équations ? \\
+\bottomrule
+\end{tabularx}
+\end{center}
+
+\subsection{Une première expérience de templates, au bon moment}
+Quand le noyau fonctionne, écris à part une fonction de composition de deux
+objets appelables, paramétrée par leurs types. Compare-la à
+\code{compose(const Morphism&, const Morphism&)}.
+La première construit un calcul exécutable ; la seconde construit une
+description inspectable. Comprendre cette différence t'évitera de perdre
+la capacité de réécriture en remplaçant trop tôt toutes les descriptions
+par des fonctions opaques.
+
+\subsection{Un premier backend}
+Une autre suite naturelle consiste à produire un fichier C++ à partir
+du morphisme fusionné. Tu pourras alors vérifier qu'une seule boucle est
+générée, compiler le fichier et comparer ses résultats à ceux de
+l'interpréteur de référence. Le passage du modèle mathématique au code
+généré deviendra une nouvelle obligation de correction.
+
+\textbf{Conseil de progression :} choisis une seule de ces extensions pour
+le prochain jalon. Le but reste de comprendre du C++ à travers les
+constructions catégoriques que tu as envie d'explorer.
+
+\clearpage
+\section{Repères de travail et ressources}
+\label{sec:reperes}
+\subsection{Petit dictionnaire du projet}
+\begin{description}[style=nextline,leftmargin=0pt,labelindent=0pt,labelsep=0pt,
+  labelwidth=0pt,font=\bfseries]
+\item[Objet] Un domaine de valeurs. Ici, \(U\), puis \(\List(U)\).
+\item[Morphisme] Une transformation avec un domaine et un codomaine.
+Nos morphismes scalaires vont tous de \(U\) vers \(U\).
+\item[Générateur] Une opération élémentaire, ici \(A_c\) ou \(S\).
+\item[Composition] Enchaînement : \(g\circ f\) exécute \(f\), puis \(g\).
+\item[Identité] Morphisme qui laisse la valeur inchangée ; chemin vide
+dans notre syntaxe scalaire.
+\item[Interprétation] Passage d'une description \(p\) à la fonction
+\(\sem{p}\) qu'elle représente.
+\item[Foncteur] Application sur les objets et les morphismes qui préserve
+l'identité et la composition.
+\item[Réécriture] Remplacement d'une description par une autre selon une
+règle justifiée, éventuellement à l'intérieur d'un programme.
+\item[Modèle de coût] Critère explicite pour comparer les descriptions :
+nombre de primitives, de parcours, etc.
+\end{description}
+
+\subsection{La fiche à remplir après chaque séance}
+\begin{enumerate}
+\item \textbf{Dans CatOpt :} qu'est-ce que mon programme sait faire de plus ?
+\item \textbf{En catégories :} quel objet, morphisme ou quelle loi ai-je manipulé ?
+\item \textbf{En C++ :} quelle notion ai-je utilisée, et pourquoi ?
+\item \textbf{Vérification :} quel exemple pouvait révéler une erreur ?
+\item \textbf{Prochaine petite tâche :} quelle fonction ou quel cas vais-je traiter ?
+\end{enumerate}
+
+\subsection{Lectures ciblées, facultatives}
+\begin{itemize}
+\item Pour vérifier la sémantique des entiers :
+\href{https://eel.is/c++draft/basic.fundamental}{brouillon de travail du standard C++, types fondamentaux},
+notamment le paragraphe sur l'arithmétique non signée. Ce document technique
+évolue ; le comportement modulaire utilisé ici est établi en C++20.
+\item Pour voir une bibliothèque qui manipule objets, morphismes et
+diagrammes : \href{https://docs.discopy.org/en/main/index.html}{documentation de DisCoPy}.
+Elle propose notamment des diagrammes, des compositions et des interprétations
+par foncteurs. Elle est une source d'exemples, pas un prérequis pour ce guide.
+\item Après les premières réécritures, pour découvrir la saturation d'égalités :
+\href{https://www.mwillsey.com/papers/egg}{Willsey et al., \emph{egg: Fast and Extensible Equality Saturation}, POPL 2021}.
+Cette lecture prépare une extension ultérieure.
+\end{itemize}
+
+\subsection{Compiler ce document}
+Le fichier \code{CatOpt-guide-demarrage.tex} est autonome et peut être
+importé dans Overleaf avec le compilateur pdfLaTeX. Avec une installation
+TeX Live ou MacTeX incluant les paquets utilisés, place-toi dans son dossier :
+\begin{lstlisting}[style=plain]
+latexmk -pdf -interaction=nonstopmode -halt-on-error \
+    CatOpt-guide-demarrage.tex
+\end{lstlisting}
+
+\textbf{Ta première séance :} termine l'étape 0, puis écris les trois
+fonctions scalaires de l'étape 1. Arrête-toi quand tu sais expliquer pourquoi
+\(S\circ A_1\) envoie \(3\) sur \(16\), et pourquoi l'ordre inverse donne \(10\).
+
+\end{document}
