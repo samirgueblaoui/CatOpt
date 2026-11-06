@@ -1,12 +1,6 @@
-#include <iostream>
-#include <cassert>
-#include <cstdint>
-#include <limits>
-#include <stdexcept>
-#include <string>
-#include <vector>
+#include "../include/categorie.hpp"
 
-using Scalar = std::uint64_t;
+#include <stdexcept>
 
 
 Scalar identity_value(Scalar x){
@@ -20,16 +14,6 @@ Scalar add_value(Scalar x, Scalar constant){
 Scalar square_value(Scalar x){
     return x * x;
 }
-
-enum class PrimitiveKind{
-    AddConstant,
-    Square
-};
-
-struct Primitive{
-    PrimitiveKind kind;
-    Scalar constant;
-};
 
 Primitive make_add(Scalar constant){
     Primitive p;
@@ -84,10 +68,6 @@ std::string to_string(const Primitive& primitive){
     return s;
 }
 
-struct Morphism{
-    std::vector<Primitive> steps;
-};
-
 Morphism identity(){
     Morphism m;
 
@@ -121,34 +101,29 @@ std::string to_string(const Morphism& morphism){
     return s;
 }
 
-void run_tests(){
-    
-    assert(square_value(add_value(3, 1)) == 16);
-    assert(add_value(square_value(3), 1) == 10);
-    assert(add_value(std::numeric_limits<Scalar>::max(), 1) == 0);
+Morphism compose(const Morphism& g, const Morphism& f){
+    Morphism morphism;
 
-    const auto f = make_add(1);
-    const auto g = make_square();
-    assert(evaluate(f, 3) == 4);
-    assert(evaluate(g, 4) == 16);
-    assert(to_string(f) == "Add(1)");
+    morphism.steps.reserve(f.steps.size() + g.steps.size());
 
-    const auto m = identity();
-    Morphism m2;
-    m2.steps.push_back(make_add(1));
-    m2.steps.push_back(make_square());
-    assert(evaluate(m, 1) == 1);
-    assert(evaluate(m2, 3) == 16);
-    assert(to_string(m) == "Id");
-    assert(to_string(m2) == "Add(1) >> Square");
+    morphism.steps.insert(morphism.steps.end(),
+        f.steps.begin(), f.steps.end());
 
-    std::cout << "Tout les test sont passé avec succes !\n";
+    morphism.steps.insert(morphism.steps.end(),
+        g.steps.begin(), g.steps.end());
+
+    return morphism;
 }
 
-int main(){
+bool same_syntax(const Morphism& a, const Morphism& b){
+    if(a.steps.size() != b.steps.size()) return false;
 
-    std::cout << "CatOpt - premier morphisme\n";
-    run_tests();
+    for(size_t i = 0; i < a.steps.size(); i++){
+        if(a.steps[i].kind != b.steps[i].kind) return false;
+        if(a.steps[i].kind == PrimitiveKind::AddConstant){
+            if(a.steps[i].constant != b.steps[i].constant) return false;
+        }
+    }
 
-    return 0;
+    return true;
 }
