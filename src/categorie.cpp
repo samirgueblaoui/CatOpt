@@ -127,3 +127,15 @@ bool same_syntax(const Morphism& a, const Morphism& b){
 
     return true;
 }
+
+Values map_values(const Morphism& f, const Values& input){
+    Values v;
+    v.reserve(input.size());
+
+    for(const Scalar& x : input){
+        Scalar s = evaluate(f, x);
+        v.push_back(s);
+    }
+
+    return v;
+}

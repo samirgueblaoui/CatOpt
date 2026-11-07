@@ -27,7 +27,8 @@ Morphism simplify(const Morphism& input){
     if(acc != 0){
         m2.steps.push_back(make_add(acc));
     }
-    
+
     return m2;
 
 }
+

@@ -76,5 +76,20 @@ void run_tests_optimiseur(){
     Morphism m8s{{make_square(), make_add(5)}};
     assert(same_syntax(simplify(m8), m8s));
     assert(same_syntax(simplify(simplify(m8)), simplify(m8)));
-    
+
+
+    Morphism f{{make_add(0), make_square(), make_add(2), make_add(3)}};
+    Morphism g{{make_square(), make_add(4), make_square()}};
+    Values vgf{841, 1600, 7225, 40000};
+    Values empty;
+    Values input{0, 1, 2, 3};
+    Values v;
+    assert(map_values(f, empty) == v);
+    assert(input.size() == map_values(f, input).size());
+
+
+    assert(map_values(identity(), input) == input);
+    assert(map_values(compose(g, f), input) == vgf);
+    assert(map_values(compose(g, f), input) == map_values(g, map_values(f, input)));
+
 }

@@ -5,6 +5,7 @@
 #include <vector>
 
 using Scalar = std::uint64_t;
+using Values = std::vector<Scalar>;
 
 
 Scalar identity_value(Scalar x);
@@ -46,3 +47,5 @@ std::string to_string(const Morphism& morphism);
 Morphism compose(const Morphism& g, const Morphism& f);
 
 bool same_syntax(const Morphism& a, const Morphism& b);
+
+Values map_values(const Morphism& f, const Values& input);
