@@ -139,3 +139,26 @@ Values map_values(const Morphism& f, const Values& input){
 
     return v;
 }
+
+Values evaluate(const MapPipeline& pipeline, const Values& input){
+    Values v = input;
+
+    for(const Morphism& m : pipeline.stages){
+        v = map_values(m, v);
+    }
+
+    return v;
+}
+
+std::string to_string(const MapPipeline& pipeline){
+    std::string s;
+
+    if(pipeline.stages.empty()) return "IdList";
+    
+    for(size_t i = 0; i < pipeline.stages.size() - 1; i++){
+        s += "Map(" + to_string(pipeline.stages[i]) + ") >> ";
+    }
+    s += "Map(" + to_string(pipeline.stages[pipeline.stages.size() - 1]) + ")";
+
+    return s;
+}

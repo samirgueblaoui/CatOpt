@@ -92,4 +92,19 @@ void run_tests_optimiseur(){
     assert(map_values(compose(g, f), input) == vgf);
     assert(map_values(compose(g, f), input) == map_values(g, map_values(f, input)));
 
+
+    MapPipeline mp{{f, g}};
+    MapPipeline mp2{{}};
+    MapPipeline mp3{{f, g, identity()}};
+    MapPipeline mp4{{identity()}};
+    assert(evaluate(mp, input) == vgf);
+    assert(evaluate(mp2, input) == input);
+    assert(evaluate(mp4, input) == input);
+    assert(evaluate(mp, empty).empty());
+    assert(to_string(mp) == "Map(Add(0) >> Square >> Add(2) >> Add(3)) >> Map(Square >> Add(4) >> Square)");
+    assert(to_string(mp2) == "IdList");
+    assert(to_string(mp3) == "Map(Add(0) >> Square >> Add(2) >> Add(3)) >> Map(Square >> Add(4) >> Square) >> Map(Id)");
+    assert(to_string(mp4) == "Map(Id)");
+
+
 }

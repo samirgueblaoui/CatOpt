@@ -49,3 +49,11 @@ Morphism compose(const Morphism& g, const Morphism& f);
 bool same_syntax(const Morphism& a, const Morphism& b);
 
 Values map_values(const Morphism& f, const Values& input);
+
+struct MapPipeline{
+    std::vector<Morphism> stages;
+};
+
+Values evaluate(const MapPipeline& pipeline, const Values& input);
+
+std::string to_string(const MapPipeline& pipeline);
