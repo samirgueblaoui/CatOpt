@@ -32,3 +32,18 @@ Morphism simplify(const Morphism& input){
 
 }
 
+MapPipeline fuse_maps(const MapPipeline& input){
+    MapPipeline output;
+
+    if(input.stages.empty()) return output;
+
+    Morphism acc = identity();
+
+    for(const Morphism& m : input.stages){
+        acc = compose(m , acc);
+    }
+
+    output.stages.push_back(acc);
+
+    return output;
+}

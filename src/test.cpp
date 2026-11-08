@@ -106,5 +106,8 @@ void run_tests_optimiseur(){
     assert(to_string(mp3) == "Map(Add(0) >> Square >> Add(2) >> Add(3)) >> Map(Square >> Add(4) >> Square) >> Map(Id)");
     assert(to_string(mp4) == "Map(Id)");
 
+    assert(evaluate(fuse_maps(mp3), input) == evaluate(mp3, input));
+    assert(evaluate(fuse_maps(mp2), input) == evaluate(mp2, input));
+    assert(to_string(fuse_maps(mp3)) == "Map(Add(0) >> Square >> Add(2) >> Add(3) >> Square >> Add(4) >> Square)");
 
 }

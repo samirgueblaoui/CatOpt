@@ -154,7 +154,7 @@ std::string to_string(const MapPipeline& pipeline){
     std::string s;
 
     if(pipeline.stages.empty()) return "IdList";
-    
+
     for(size_t i = 0; i < pipeline.stages.size() - 1; i++){
         s += "Map(" + to_string(pipeline.stages[i]) + ") >> ";
     }
@@ -162,3 +162,4 @@ std::string to_string(const MapPipeline& pipeline){
 
     return s;
 }
+
