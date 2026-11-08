@@ -4,6 +4,8 @@
 #include <string>
 #include <vector>
 
+namespace catopt{
+
 using Scalar = std::uint64_t;
 using Values = std::vector<Scalar>;
 
@@ -19,9 +21,19 @@ enum class PrimitiveKind{
     Square
 };
 
-struct Primitive{
-    PrimitiveKind kind;
-    Scalar constant;
+class Primitive {
+public:
+    static Primitive add(Scalar constant);
+    static Primitive square();
+
+    PrimitiveKind kind() const;
+    Scalar constant() const;
+
+private:
+    Primitive(PrimitiveKind kind, Scalar constant);
+
+    PrimitiveKind kind_;
+    Scalar constant_;
 };
 
 Primitive make_add(Scalar constant);
@@ -32,8 +44,15 @@ Scalar evaluate(const Primitive& primitive, Scalar x);
 
 std::string to_string(const Primitive& primitive);
 
-struct Morphism{
-    std::vector<Primitive> steps;
+class Morphism{
+public:
+    Morphism();
+    Morphism(const std::vector<Primitive>& steps);
+
+    const std::vector<Primitive>& steps() const;
+
+private:
+    std::vector<Primitive> steps_;
 };
 
 Morphism identity();
@@ -48,6 +67,8 @@ Morphism compose(const Morphism& g, const Morphism& f);
 
 bool same_syntax(const Morphism& a, const Morphism& b);
 
+Morphism simplify(const Morphism& input);
+
 Values map_values(const Morphism& f, const Values& input);
 
 struct MapPipeline{
@@ -57,3 +78,7 @@ struct MapPipeline{
 Values evaluate(const MapPipeline& pipeline, const Values& input);
 
 std::string to_string(const MapPipeline& pipeline);
+
+MapPipeline fuse_maps(const MapPipeline& input);
+
+}
