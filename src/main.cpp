@@ -2,8 +2,6 @@
 #include "../include/test.hpp"
 #include "../include/catopt.hpp"
 
-
-
 int main(){
 
     std::cout << "Projet CatOpt :\n\n";
